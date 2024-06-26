@@ -181,6 +181,7 @@ end
 ---@param tint1 integer
 ---@param tint2 integer
 local function AddCachedColor(ped,category,palette,tint0,tint1,tint2)
+  if palette == 0 then return end
   category = GetHashFromString(category)
   if not jo.cache.clothes.color[ped] then jo.cache.clothes.color[ped] = {} end
   jo.cache.clothes.color[ped][category] = {
@@ -189,6 +190,7 @@ local function AddCachedColor(ped,category,palette,tint0,tint1,tint2)
     tint0 = tint0,
     tint1 = tint1,
     tint2 = tint2,
+    catHash = category
   }
   if category == joaat('neckwear') then
     jo.cache.clothes.color[ped][joaat('neckerchiefs')] = jo.cache.clothes.color[ped][category]
@@ -227,9 +229,12 @@ local function ReapplyClothesStats(ped)
     end
   end
   RefreshPed(ped)
+  WaitRefreshPed(ped)
 end
 
 local function ReapplyClothesColor(ped)
+  TriggerServerEvent("print",jo.cache.clothes.color[ped])
+  TriggerServerEvent("print",jo.clothes.getCategoriesEquiped(ped))
   for category,data in pairs (jo.cache.clothes.color[ped] or {}) do
     SetTextureOutfitTints(ped,category,data.palette,data.tint0,data.tint1,data.tint2)
   end
@@ -238,9 +243,16 @@ end
 
 local function ReapplyCached(ped)
   if not jo.cache.clothes.color[ped] then return end
-  jo.timeout:delay('ReapplyCachedColor',function() WaitRefreshPed(ped) end, function()
+  jo.timeout.delay('ReapplyCachedColor',function() WaitRefreshPed(ped) end, function()
     ReapplyClothesStats(ped)
+    local data = table.copy(jo.cache.clothes.color[ped][2056714954])
+    TriggerServerEvent("print","=>",data)
 		ReapplyClothesColor(ped)
+    RefreshPed(ped)
+    Wait(2000)
+    print('neck')
+    TriggerServerEvent("print",data)
+    SetTextureOutfitTints(ped,GetStringFromHashKey('neckties'),data.palette,data.tint0,data.tint1,data.tint2)
     RefreshPed(ped)
 	end)
 end
